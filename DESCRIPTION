@@ -5,15 +5,7 @@ Description: OCR tools including Google Vision API and Tesseract helping to OCR 
 License: MIT + file LICENSE
 Depends: 
     R (>= 3.6)
-Imports:
-    shiny,
-    dplyr,
-    stringr,
-    shinyWidgets,
-    pdftools,
-    magick,
-    tesseract,
-    googleCloudVisionR
 Encoding: UTF-8
 Language: en-US
 RoxygenNote: 7.3.1
+Imports: shiny,dplyr,stringr, shinyWidgets,pdftools,magick,tesseract,googleCloudVisionR
