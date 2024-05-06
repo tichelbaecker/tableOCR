@@ -10,7 +10,7 @@
 #' @import shinyWidgets
 #' @import magick
 #' @importFrom pdftools pdf_render_page
-#' @import tesseract
-#' @import googleCloudVisionR
+#' @importFrom tesseract tesseract ocr_data
+#' @importFrom googleCloudVisionR gcv_get_image_annotations
 ## usethis namespace: end
 NULL
