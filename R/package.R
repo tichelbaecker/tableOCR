@@ -8,8 +8,8 @@
 #' @import dplyr
 #' @import stringr
 #' @import shinyWidgets
-#' @import pdftools
 #' @import magick
+#' @importFrom pdftools pdf_render_page
 #' @import tesseract
 #' @import googleCloudVisionR
 ## usethis namespace: end
