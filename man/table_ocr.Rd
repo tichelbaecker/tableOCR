@@ -2,13 +2,20 @@
 % Please edit documentation in R/tableOCR.R
 \name{table_ocr}
 \alias{table_ocr}
-\title{TableOCR Shiny app}
+\title{Fahrenheit conversion}
 \usage{
 table_ocr(auth_file_path)
 }
 \arguments{
-\item{auth_file_path}{Path to Google Vision API json credential file}
+\item{F_temp}{The temperature in degrees Fahrenheit}
+}
+\value{
+The temperature in degrees Celsius
 }
 \description{
-TableOCR Shiny app
+Convert degrees Fahrenheit temperatures to degrees Celsius
+}
+\examples{
+temp1 <- F_to_C(50);
+temp2 <- F_to_C( c(50, 63, 23) );
 }
