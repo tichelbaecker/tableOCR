@@ -5,6 +5,11 @@
 
 ###### Written by Thomas Tichelbaecker, Princeton University
 
+#' TableOCR Shiny app
+#'
+#' @param auth_file_path Path to Google Vision API json credential file
+#' @export
+
 table_ocr <- function(auth_file_path){
 
 ####### 1. Libraries ########
