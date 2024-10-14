@@ -349,9 +349,9 @@ server <- function(input, output) {
         
         # load image
         img <- image_read(bitmap) %>% 
-          image_convert(., colorspace = "Gray") %>% 
-          image_threshold(type = "black", threshold = "65%") %>%
-          image_threshold(type = "white", threshold = "65%") %>%
+          # image_convert(., colorspace = "Gray") %>% 
+          # image_threshold(type = "black", threshold = "65%") %>%
+          # image_threshold(type = "white", threshold = "65%") %>%
           #image_deskew() %>%
           image_rotate(., input$rotate) 
         
@@ -367,9 +367,9 @@ server <- function(input, output) {
         
         # load image
         img <- image_read(f$datapath) %>% 
-          image_convert(., colorspace = "Gray") %>% 
-          image_threshold(type = "black", threshold = "65%") %>%
-          image_threshold(type = "white", threshold = "65%") %>%
+          # image_convert(., colorspace = "Gray") %>% 
+          # image_threshold(type = "black", threshold = "65%") %>%
+          # image_threshold(type = "white", threshold = "65%") %>%
           #image_deskew() %>%
           image_rotate(., input$rotate) 
         
@@ -598,7 +598,7 @@ server <- function(input, output) {
       #### Google OCR authentification
       #json_file <- list.files()[str_detect(list.files(), "json")]
       json_file <- auth_file_path
-      if(!file.exists(json_file) | length(json_file) > 1){stop()}
+      if(!file.exists(json_file) | is.na(json_file)){stop()}
       
       # Authenticate
       Sys.setenv("GCV_AUTH_FILE" = json_file)
@@ -609,8 +609,7 @@ server <- function(input, output) {
       if(!file.exists(json_file)){
         
         # Return error 
-        showNotification("There is no Google Auth json file in your project folder. 
-                          Look in documentation for resources to set up Google OCR.", 
+        showNotification("No Google Auth json file found. Check file existence and path.", 
                          type = "error")
       }
       
@@ -618,9 +617,7 @@ server <- function(input, output) {
       else if(length(json_file) > 1){
         
         # Return error 
-        showNotification("There is more than one Google Auth json file in 
-                          your project folder. Please make sure there is only one 
-                         json file.", 
+        showNotification("Path string has to be of length 1.", 
                          type = "error")
       }
       
