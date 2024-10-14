@@ -85,7 +85,7 @@ ui <- fluidPage(
                  h6("OCR", style = "font-weight: 700;"), 
                  
                  # Use tesseract
-                 actionButton("tesseract", "OCR Tesseract"),
+                 #actionButton("tesseract", "OCR Tesseract"),
                  actionButton("google", "OCR Google"),
                 
 
@@ -154,8 +154,8 @@ ui <- fluidPage(
                  h6( "Advanced options", style = "font-weight: 700;"),
                  
                  # Tesseract language
-                 selectInput("tesseract_language", "Language",
-                             choices = c( "deu","eng", "dan"), width = "70%"),
+                 #selectInput("tesseract_language", "Language",
+                 #           choices = c( "deu","eng", "dan"), width = "70%"),
                  
                  numericInput("tesseract_confidence", "Confidence", 80, min = 1, max = 100),
                  
