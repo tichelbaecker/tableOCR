@@ -8,7 +8,8 @@ Authors@R:
            email = "tt9@princeton.edu")
 Description: This package contains functions we frequently use. 
 License: What license it uses
-Imports: @import dplyr
+Imports:
+    dplyr
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.1
