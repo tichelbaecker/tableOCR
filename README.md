@@ -82,7 +82,7 @@ To give an illustrative example, let's consider this table from the results of c
 
 <div class="row mt-6">
     <div class="col-sm mt-6 mt-md-0">
-        {% include figure.liquid loading="eager" path="assets/img/example_screen1.png" class="img-fluid rounded z-depth-1" zoomable=true %}
+        <img path="https://tichelbaecker.com/assets/img/example_screen1.png" class="img-fluid rounded z-depth-1" zoomable=true>
     </div>
 </div>
 
