@@ -104,15 +104,3 @@ You can then also look at the results by changing to the `OCR Results` tab. The 
 ![OCR Results](https://tichelbaecker.com/assets/img/example_screen5.png)
 
 
-
-<style>
-
-h2 {
-   color: var(--global-theme-color);
-   font-weight: 500;
-   margin-bottom: 5px;
-   margin-top: 30px;
-   font-size:1.2rem
-}
-
-</style>
