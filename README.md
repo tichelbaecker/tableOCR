@@ -80,45 +80,29 @@ When calling the `table_ocr` function, the ShinyApp opens in a window. Here, you
 
 To give an illustrative example, let's consider this table from the results of county elections in the county of Calw in the state of Baden-Wuerttemberg in 1989. The table provides results by electoral district. For demonstrative purposes, we only want to extract the left table.
 
-<div class="row mt-6">
-    <div class="col-sm mt-6 mt-md-0">
-        <img path="https://tichelbaecker.com/assets/img/example_screen1.png" class="img-fluid rounded z-depth-1" zoomable=true>
-    </div>
-</div>
+![Example table](https://tichelbaecker.com/assets/img/example_screen1.png)
 
 In a first step, we can load the image by clicking on the `Select Document` button and selecting the respective file. If images are tilted, we can rotate them by indicating the degrees below in the `Rotate` field. Number can be positive or negative. We can then set manually columns (or vertical lines by simple left mouse click) and top and bottom rule (left mouse click + `a`) to this table in order to extract it. 
 
-<div class="row mt-3">
-    <div class="col-sm mt-3 mt-md-0">
-        {% include figure.liquid loading="eager" path="assets/img/example_screen2.png" class="img-fluid rounded z-depth-1" zoomable=true %}
-    </div>
-</div>
+
+![Select document](https://tichelbaecker.com/assets/img/example_screen2.png)
+
 
 If we want to delete one of the lines that we set, we can do so by clicking near the respective line while holding `d` (left mouse click + `d`). Selected vertical lines become blue and horizontal lines red (see image below). If you want to delete the selected lines, press the `Backspace` key on your keyboard and the lines will disappear.
 
-<div class="row mt-3">
-    <div class="col-sm mt-3 mt-md-0">
-        {% include figure.liquid loading="eager" path="assets/img/example_screen4.png" class="img-fluid rounded z-depth-1" zoomable=true %}
-    </div>
-</div>
+![Selecting lines](https://tichelbaecker.com/assets/img/example_screen4.png)
 
 
 If you have set all lines, you can hit the `OCR Google` button. This will connect to the Google OCR. To check the quality of the recognized fields, you can turn visualization on.
 
-<div class="row mt-3">
-    <div class="col-sm mt-3 mt-md-0">
-        {% include figure.liquid loading="eager" path="assets/img/example_screen2.png" class="img-fluid rounded z-depth-1" zoomable=true %}
-    </div>
-</div>
+![Visualization of OCR boxes on](https://tichelbaecker.com/assets/img/example_screen3.png)
+
 
 
 You can then also look at the results by changing to the `OCR Results` tab. The results for our tables show that there is overall relative good recognition with two mistakes. A "4" was misread for a "$" and there is on additional row featuring a non-sensical result.
 
-<div class="row mt-3">
-    <div class="col-sm mt-3 mt-md-0">
-        {% include figure.liquid loading="eager" path="assets/img/example_screen5.png" class="img-fluid rounded z-depth-1" zoomable=true %}
-    </div>
-</div>
+![OCR Results](https://tichelbaecker.com/assets/img/example_screen5.png)
+
 
 
 <style>
