@@ -338,29 +338,27 @@ server <- function(input, output) {
         return(NULL)
       
       # For PDF input
-      if(str_detect(f$datapath, "\\.pdf")){
+      if (str_detect(f$datapath, "\\.pdf$")) {
         
-        # Convert PDF page to bitmap
-        # bitmap <- pdf_render_page(f$datapath, 
-        #                           numeric = F,
-        #                           page = input$page, # Page number
-        #                           dpi = 200) # resolution
-
+        # 1) Render the PDF page to a bitmap using pdftools
+        bitmap <- pdftools::pdf_render_page(
+          pdf  = f$datapath,
+          page = input$page,
+          dpi  = 200
+        )
+        # bitmap is a [height x width x 3] array (RGB)
         
-        # load image
-        img <- image_read_pdf(f$datapath, density = 200)[[input$page]] %>% 
-          # image_convert(., colorspace = "Gray") %>% 
-          # image_threshold(type = "black", threshold = "65%") %>%
-          # image_threshold(type = "white", threshold = "65%") %>%
-          #image_deskew() %>%
-          image_rotate(., input$rotate) 
+        # 2) Convert bitmap → raw PNG and read with magick
+        png_raw <- png::writePNG(bitmap)
+        img <- magick::image_read(png_raw) |>
+          magick::image_rotate(input$rotate)
         
-        # calculate height
-        image_meta <- image_data(img)
-        height <<- dim(image_meta)[3]
+        # 3) Get height correctly from metadata
+        meta <- magick::image_info(img)
+        height <<- meta$height
         
-        # display image
         img
+      }
         
         # For image input  
       }else{
