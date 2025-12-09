@@ -358,7 +358,7 @@ server <- function(input, output) {
         height <<- meta$height
         
         img
-      }
+      
         
         # For image input  
       }else{
