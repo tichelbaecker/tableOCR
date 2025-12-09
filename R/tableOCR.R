@@ -348,7 +348,7 @@ server <- function(input, output) {
 
         
         # load image
-        img <- image_read_pdf(f$datapath, density = 200)[input$page] %>% 
+        img <- image_read_pdf(f$datapath, density = 200)[[input$page]] %>% 
           # image_convert(., colorspace = "Gray") %>% 
           # image_threshold(type = "black", threshold = "65%") %>%
           # image_threshold(type = "white", threshold = "65%") %>%
