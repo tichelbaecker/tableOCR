@@ -73,7 +73,7 @@ ui <- fluidPage(
                  fileInput("image", "", 
                            buttonLabel = "Select Document", 
                            placeholder = ""),
-                 numericInput("page", "Page", 1, min = 1),
+                 numericInput("page", "Page", 1, min = 0),
                  numericInput("rotate", "Rotate", 0, min = 0),
                  
                  # Zoom in
