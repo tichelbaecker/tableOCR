@@ -341,7 +341,7 @@ server <- function(input, output) {
       if (str_detect(f$datapath, "\\.pdf$")) {
         
         
-        path_page = paste0(f$datapath, "[", input$page, "]")
+        path_page = paste0(f$datapath, "[", input$page - 1, "]")
         
         img <- image_read(
           path = path_page,
