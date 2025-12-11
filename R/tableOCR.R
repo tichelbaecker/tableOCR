@@ -376,7 +376,7 @@ server <- function(input, output) {
         # load image
         img <- image_read(f$datapath) |> 
           image_rotate(., input$rotate) |> 
-          image_convert(., colorspace = "Gray") |> 
+          image_convert(., colorspace = "Gray") 
           # image_threshold(type = "black", threshold = "65%") %>%
           # image_threshold(type = "white", threshold = "65%") %>%
           #image_deskew() %>%
