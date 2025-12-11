@@ -347,8 +347,8 @@ server <- function(input, output) {
           path = path_page,
           density = 200
         ) |> 
-          image_convert(., colorspace = "Gray") %>% 
-          image_rotate(., input$rotate) 
+          image_rotate(., input$rotate) |> 
+          image_convert(., colorspace = "Gray") 
         
         # 1) Render the PDF page to a bitmap using pdftools
         # bitmap <- pdftools::pdf_render_page(
@@ -374,13 +374,13 @@ server <- function(input, output) {
       }else{
         
         # load image
-        img <- image_read(f$datapath) %>% 
-          image_convert(., colorspace = "Gray") %>% 
-          # image_convert(., colorspace = "Gray") %>% 
+        img <- image_read(f$datapath) |> 
+          image_rotate(., input$rotate) |> 
+          image_convert(., colorspace = "Gray") |> 
           # image_threshold(type = "black", threshold = "65%") %>%
           # image_threshold(type = "white", threshold = "65%") %>%
           #image_deskew() %>%
-          image_rotate(., input$rotate) 
+          
         
         # calculate height
         image_meta <- image_data(img)
