@@ -346,7 +346,9 @@ server <- function(input, output) {
         img <- image_read(
           path = path_page,
           density = 200
-        )
+        ) |> 
+          image_convert(., colorspace = "Gray") %>% 
+          image_rotate(., input$rotate) 
         
         # 1) Render the PDF page to a bitmap using pdftools
         # bitmap <- pdftools::pdf_render_page(
@@ -373,6 +375,7 @@ server <- function(input, output) {
         
         # load image
         img <- image_read(f$datapath) %>% 
+          image_convert(., colorspace = "Gray") %>% 
           # image_convert(., colorspace = "Gray") %>% 
           # image_threshold(type = "black", threshold = "65%") %>%
           # image_threshold(type = "white", threshold = "65%") %>%
