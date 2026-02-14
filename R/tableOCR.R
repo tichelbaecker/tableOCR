@@ -13,41 +13,77 @@ table_ocr <- function(auth_file_path){
 
 ####### 2. Helper functions ########
 
-##### Line segmentation via line overlap
-# Basic idea is to capture all bounding boxes that overlap 
-# with midpoint of randomly chosen bounding box, repeat until all 
-# OCR and associated results are assigned to a line
-
-# 3 Arguments
-#      - centered_y: midpoint of all bounding boxes
+##### Line segmentation via line fitting (RANSAC-style)
+# Handles skewed documents by fitting a regression line (y ~ x)
+# through candidate bounding boxes rather than assuming perfectly
+# horizontal alignment. Iteratively picks a seed box, gathers
+# nearby candidates, fits a line, then assigns all boxes within
+# a perpendicular distance threshold.
+#
+# 4 Arguments
+#      - centered_y: y midpoint of all bounding boxes
+#      - centered_x: x midpoint of all bounding boxes
 #      - y_upper: upper y limit of all bounding boxes
 #      - y_lower: lower y limit of all bounding boxes
-line_segment_overlap <- function(centered_y, 
-                                 y_upper, 
-                                 y_lower){
-  
-  # output vector
-  lines_y <- rep(NA, times = length(centered_y))
-  
-  # while loop that continues as long as there are missing values
-  while (sum(is.na(lines_y) != 0)){
-    
-    # set seed index, choose random box to see what 
-    # boxes are on same line
-    seed.index <- sample(1:length(centered_y), 1)
-    
-    # get midpoint of seed box
-    seed <- centered_y[seed.index]
-    
-    # get indeces of all boxes that are cut by midpoint line
-    indeces <- which(seed < y_lower & 
-                       seed > y_upper)
-    
-    # return all lines
-    lines_y[c(seed.index, indeces)] <- seed
-    
+line_segment_fit <- function(centered_y,
+                             centered_x,
+                             y_upper,
+                             y_lower){
+
+  n <- length(centered_y)
+  lines_y <- rep(NA_real_, n)
+  median_height <- median(abs(y_lower - y_upper))
+  threshold <- median_height * 0.5
+
+  remaining <- seq_len(n)
+
+  while (length(remaining) > 0) {
+
+    # pick a random unassigned box as seed
+    seed_idx <- sample(remaining, 1)
+    seed_mid <- centered_y[seed_idx]
+
+    # initial candidates: boxes whose midpoint is within 1.5x
+    # median box height of the seed (generous vertical window)
+    initial <- remaining[abs(centered_y[remaining] - seed_mid) <
+                           median_height * 1.5]
+
+    if (length(initial) >= 2) {
+
+      # fit a line through initial candidates
+      fit <- lm(centered_y[initial] ~ centered_x[initial])
+      slope     <- unname(coef(fit)[2])
+      intercept <- unname(coef(fit)[1])
+      if (is.na(slope)) slope <- 0
+
+      # perpendicular distance from every remaining box to fitted line
+      denom <- sqrt(1 + slope^2)
+      distances <- abs(centered_y[remaining] -
+                         slope * centered_x[remaining] - intercept) / denom
+      on_line <- remaining[distances < threshold]
+
+      # refit with the inlier set for a tighter estimate
+      if (length(on_line) >= 2) {
+        fit2 <- lm(centered_y[on_line] ~ centered_x[on_line])
+        slope2     <- unname(coef(fit2)[2])
+        intercept2 <- unname(coef(fit2)[1])
+        if (is.na(slope2)) slope2 <- 0
+
+        distances2 <- abs(centered_y[remaining] -
+                            slope2 * centered_x[remaining] - intercept2) /
+                      sqrt(1 + slope2^2)
+        on_line <- remaining[distances2 < threshold]
+      }
+
+    } else {
+      on_line <- initial
+    }
+
+    # label with mean y so sorting by unique(lines_y) preserves row order
+    lines_y[on_line] <- mean(centered_y[on_line])
+    remaining <- setdiff(remaining, on_line)
   }
-  
+
   return(lines_y)
 }
 
@@ -705,9 +741,10 @@ server <- function(input, output) {
       
       ###### Line segmentation
       
-      lines_y <- line_segment_overlap(text_df$centered_y, 
-                                      text_df$y2, 
-                                      text_df$y1)
+      lines_y <- line_segment_fit(text_df$centered_y,
+                                    text_df$centered_x,
+                                    text_df$y2,
+                                    text_df$y1)
       text_df$lines_y <- lines_y
       
       
@@ -899,9 +936,10 @@ server <- function(input, output) {
       
       ###### Line segmentation
       
-      lines_y <- line_segment_overlap(text_df$centered_y,
-                                      text_df$y2,
-                                      text_df$y1)
+      lines_y <- line_segment_fit(text_df$centered_y,
+                                    text_df$centered_x,
+                                    text_df$y2,
+                                    text_df$y1)
       text_df$lines_y <- lines_y
       
       
