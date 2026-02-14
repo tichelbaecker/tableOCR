@@ -55,140 +55,308 @@ line_segment_overlap <- function(centered_y,
 ####### 3. UI ########
 
 ui <- fluidPage(
+  tags$head(
+    tags$style(HTML("
+      /* Base */
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+                     'Helvetica Neue', Arial, sans-serif;
+        background-color: #f4f6f9;
+        color: #2d3748;
+      }
+
+      /* Header */
+      .app-header {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        color: #fff;
+        padding: 16px 24px;
+        margin: -20px -15px 20px -15px;
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+        box-shadow: 0 2px 10px rgba(79,70,229,0.3);
+      }
+      .app-header small {
+        font-size: 12px;
+        font-weight: 400;
+        opacity: 0.8;
+        margin-left: 10px;
+      }
+
+      /* Sidebar well */
+      .well {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        padding: 14px;
+      }
+
+      /* Section cards */
+      .section-card {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-bottom: 10px;
+      }
+      .section-title {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: #94a3b8;
+        margin: 0 0 8px 0;
+        padding-bottom: 5px;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      /* Buttons */
+      .btn {
+        font-size: 12px;
+        font-weight: 500;
+        border-radius: 6px;
+        padding: 5px 12px;
+        transition: all 0.15s ease;
+        cursor: pointer;
+      }
+      .btn-primary, .btn-primary:focus {
+        background: #4f46e5 !important;
+        color: #fff !important;
+        border: none !important;
+      }
+      .btn-primary:hover {
+        background: #4338ca !important;
+      }
+      .btn-danger, .btn-danger:focus {
+        background: #ef4444 !important;
+        color: #fff !important;
+        border: none !important;
+      }
+      .btn-danger:hover {
+        background: #dc2626 !important;
+      }
+      .btn-success, .btn-success:focus {
+        background: #10b981 !important;
+        color: #fff !important;
+        border: none !important;
+      }
+      .btn-success:hover {
+        background: #059669 !important;
+      }
+      .btn-outline-secondary {
+        background: transparent !important;
+        color: #64748b !important;
+        border: 1px solid #cbd5e1 !important;
+      }
+      .btn-outline-secondary:hover {
+        background: #f1f5f9 !important;
+        color: #475569 !important;
+      }
+
+      /* File input button */
+      .btn-file {
+        background: #4f46e5 !important;
+        color: #fff !important;
+        border: none !important;
+        border-radius: 6px !important;
+      }
+
+      /* Form controls */
+      .form-control {
+        font-size: 12px;
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
+      }
+      .form-control:focus {
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 2px rgba(79,70,229,0.15);
+      }
+      .control-label {
+        font-weight: 500;
+        font-size: 12px;
+        color: #475569;
+      }
+
+      /* Layout */
+      .sidebar-layout {
+        font-size: 12px;
+        width: 90%;
+        height: 80%;
+      }
+      .form-group {
+        margin-bottom: 6px;
+        margin-top: 4px;
+        padding: 0;
+      }
+      .progress {
+        margin-bottom: 5px;
+        height: 16px;
+        border-radius: 8px;
+        background-color: #e2e8f0;
+      }
+      .input-group .form-control {
+        width: 0px;
+        height: 0px;
+      }
+
+      /* Slider */
+      .irs--shiny .irs-bar {
+        background: #4f46e5;
+        border-top: 1px solid #4f46e5;
+        border-bottom: 1px solid #4f46e5;
+      }
+      .irs--shiny .irs-single { background: #4f46e5; }
+      .irs--shiny .irs-handle { border: 2px solid #4f46e5; }
+
+      /* Tabs */
+      .nav-tabs { border-bottom: 2px solid #e5e7eb; }
+      .nav-tabs > li > a {
+        font-size: 13px;
+        font-weight: 500;
+        color: #94a3b8;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px 6px 0 0;
+        transition: color 0.15s;
+      }
+      .nav-tabs > li > a:hover {
+        color: #4f46e5;
+        background: #f5f3ff;
+        border: none;
+      }
+      .nav-tabs > li.active > a,
+      .nav-tabs > li.active > a:hover,
+      .nav-tabs > li.active > a:focus {
+        color: #4f46e5;
+        font-weight: 600;
+        border: none;
+        border-bottom: 2px solid #4f46e5;
+        background: transparent;
+      }
+
+      /* Tables */
+      .table th {
+        background: #f8fafc;
+        font-weight: 600;
+        font-size: 12px;
+        color: #475569;
+      }
+      .table td { font-size: 12px; }
+
+      /* Radio buttons */
+      .radio label { font-size: 12px; }
+
+      /* Notifications */
+      .shiny-notification { border-radius: 8px; }
+    "))
+  ),
+
   waiter::use_waiter(),
-  
-  # Application title
-  titlePanel("TableOCR"),
-  
+
+  # App header
+  div(class = "app-header",
+    "TableOCR", tags$small("Table extraction via OCR")
+  ),
+
   # Sidebar Layout
   sidebarLayout(
-    
-    # Sidebar buttons and inputs
-    div(class = "sidebar-layout", 
+
+    div(class = "sidebar-layout",
     sidebarPanel(width = 2,
-                 
-                 h6("Image Options", style = "margin-top = 0px; font-weight: 700;"), 
-                 
-                 # Choose image
-                 fileInput("image", "", 
-                           buttonLabel = "Select Document", 
-                           placeholder = ""),
-                 numericInput("page", "Page", 1, min = 0),
-                 numericInput("rotate", "Rotate", 0, min = 0),
-                 
-                 # Zoom in
-                 sliderInput("zoom", "Zoom:",
-                             min = 0, max = 3000,
-                             value = 750),
-                 
-                 hr(style = "border-top: 1px solid #000000;"),
-                 h6("OCR", style = "font-weight: 700;"), 
-                 
-                 # Use tesseract
-                 #actionButton("tesseract", "OCR Tesseract"),
-                 actionButton("google", "OCR Google"),
-                
 
-                 actionButton("append_previous", "Add results"),
-                 
-                 
-                 hr(style = "border-top: 1px solid #000000;"),
-                 
-                 
-                 ################### CLEAR
-                 
-                 h6("Clear Lines", style = "font-weight: 700;"), 
-                 
-                 fluidRow(
-                   column(4, # Clear all set columns and rows
-                          actionButton("clear", "All")),
-                   column(8, # Clear selected line
-                          actionButton("clear_selected", "Selected"))),
+      # Image Options
+      div(class = "section-card",
+        div(class = "section-title", "Image Options"),
+        fileInput("image", NULL,
+                  buttonLabel = "Select Document",
+                  placeholder = "No file selected"),
+        numericInput("page", "Page", 1, min = 0),
+        numericInput("rotate", "Rotate", 0, min = 0),
+        sliderInput("zoom", "Zoom:",
+                    min = 0, max = 3000,
+                    value = 750)
+      ),
 
-                 
-                 hr(style = "border-top: 1px solid #000000;"),
-                 
-                 ################### SAVE
-                 
-                 h6("Save", style = "font-weight: 700;"),
-                 
-                 textInput("filename", "Input a name for the file", value = paste0("data-", Sys.Date(),".csv")),
-                 
-                 fluidRow(
-                   column(6, # Save current page
-                          downloadButton("download_current", label = "Current")),
-                          #actionButton("save_current", "Save current")),
-                   column(6, # Save all
-                          downloadButton("download_all", label = "All"))),
-                 
-                 
-                 ################### MOUSE CONTROLS
-                 
-                 hr(style = "border-top: 1px solid #000000;"),
-                 
-                 h6( "Mouse Controls", style = "font-weight: 700;"),
-                 
-                 
-                 actionButton("btn", "Show"),
-                 
-                 ## Options for lack of keyboard
-                 # Switch edit / remove lines
-                 
-                 conditionalPanel(
-                   condition = 'output.bool', 
-                   radioButtons("edit", "Edit/Remove lines:",
-                                c("On" = "edit",
-                                  "Off" = "remove"
-                                )),
-                   # Switch vertical / horizontal lines
-                   radioButtons("lines_dir", "Direction of line:",
-                                c("Vertical" = "ver",
-                                  "Horizontal" = "hor"
-                                )),
-                 ),
-                 
-                 ################### Advanced
-                 
-                 hr(style = "border-top: 1px solid #000000;"),
-                 
-                 h6( "Advanced options", style = "font-weight: 700;"),
-                 
-                 # Tesseract language
-                 #selectInput("tesseract_language", "Language",
-                 #           choices = c( "deu","eng", "dan"), width = "70%"),
-                 
-                 numericInput("tesseract_confidence", "Confidence", 80, min = 1, max = 100),
-                 
-                 actionButton("btn2", "Show"),
-                 conditionalPanel(
-                   condition = 'output.bool2', 
-                   radioButtons("visual", "Visualization",
-                                c("Off" = "off",
-                                  "On" = "on"
-                                )), 
-                   radioButtons("remove_nonalpha_numeric", "Remove non-alpha-numeric",
-                                c("On" = "on",
-                                  "Off" = "off"
-                                ))
-                 )
+      # OCR
+      div(class = "section-card",
+        div(class = "section-title", "OCR"),
+        actionButton("google", "OCR Google", class = "btn-primary",
+                     style = "width:100%; margin-bottom:6px;"),
+        actionButton("append_previous", "Add results", class = "btn-outline-secondary",
+                     style = "width:100%;")
+      ),
+
+      # Clear Lines
+      div(class = "section-card",
+        div(class = "section-title", "Clear Lines"),
+        fluidRow(
+          column(6, actionButton("clear", "All", class = "btn-danger",
+                                 style = "width:100%;")),
+          column(6, actionButton("clear_selected", "Selected", class = "btn-danger",
+                                 style = "width:100%;")))
+      ),
+
+      # Save
+      div(class = "section-card",
+        div(class = "section-title", "Save"),
+        textInput("filename", "Filename",
+                  value = paste0("data-", Sys.Date(), ".csv")),
+        fluidRow(
+          column(6, downloadButton("download_current", label = "Current",
+                                   class = "btn-success", style = "width:100%;")),
+          column(6, downloadButton("download_all", label = "All",
+                                   class = "btn-success", style = "width:100%;")))
+      ),
+
+      # Mouse Controls
+      div(class = "section-card",
+        div(class = "section-title", "Mouse Controls"),
+        actionButton("btn", "Show", class = "btn-outline-secondary",
+                     style = "width:100%;"),
+        conditionalPanel(
+          condition = 'output.bool',
+          radioButtons("edit", "Edit/Remove lines:",
+                       c("On" = "edit",
+                         "Off" = "remove"
+                       )),
+          radioButtons("lines_dir", "Direction of line:",
+                       c("Vertical" = "ver",
+                         "Horizontal" = "hor"
+                       )),
+        )
+      ),
+
+      # Advanced Options
+      div(class = "section-card",
+        div(class = "section-title", "Advanced"),
+        numericInput("tesseract_confidence", "Confidence", 80, min = 1, max = 100),
+        actionButton("btn2", "Show", class = "btn-outline-secondary",
+                     style = "width:100%;"),
+        conditionalPanel(
+          condition = 'output.bool2',
+          radioButtons("visual", "Visualization",
+                       c("Off" = "off",
+                         "On" = "on"
+                       )),
+          radioButtons("remove_nonalpha_numeric", "Remove non-alpha-numeric",
+                       c("On" = "on",
+                         "Off" = "off"
+                       ))
+        )
+      )
 
     )),
-    
-    # Show a plot of the generated distribution
+
+    # Main panel
     mainPanel(
       tabsetPanel(
-        
-        # Chosen image input
         tabPanel("Table Image", plotOutput("raster", click = "plot_click")),
-        
-        # OCR results of current page
         tabPanel("OCR Result", tableOutput("table")),
-        
-        # OCR results of all combined pages
         tabPanel("All Results", tableOutput("table_final"))
       )
     )
-  ), 
+  ),
   ## keydown
   tags$script('
       downKeyCount = 0;
@@ -205,53 +373,13 @@ ui <- fluidPage(
          Shiny.onInputChange("upKeyId", e.code);
       });'
   ),
-  
   tags$script('
     $(document).keyup(function(event) {
       if (event.keyCode == 8) {
         $("#clear_selected").click();
       }
     });'
-  ),
-  tags$head(
-    tags$style(HTML("
-        
-        .input-group .form-control {
-          width = 0px;
-          height = 0px;
-        }
-        
-        .progress {
-          margin-bottom: 5px;
-          height: 20px;
-        }
-        
-        .btn {
-          font-size: 12px;
-        
-        }
-        
-        .control-label{
-          font-weight: 400;
-        } 
-        
-        .form-control {
-          font-size: 12px;
-        
-        }
-        
-        .sidebar-layout { 
-          font-size:12px;
-          width: 90%;
-          height: 80%;
-        }
-        
-        .form-group {
-        margin-bottom: 5px;
-        margin-top: 5px;
-        padding: 0px;
-        }
-  ")))
+  )
 )
 
 
