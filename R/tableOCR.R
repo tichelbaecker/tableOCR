@@ -118,8 +118,10 @@ ui <- fluidPage(
                              value = 750),
                  
                  hr(style = "border-top: 1px solid #000000;"),
-                 h6("OCR", style = "font-weight: 700;"), 
-                 
+                 h6("OCR", style = "font-weight: 700;"),
+
+                 checkboxInput("force_rasterize", "Force rasterize PDF", value = FALSE),
+
                  # Use tesseract
                  #actionButton("tesseract", "OCR Tesseract"),
                  actionButton("google", "OCR Google"),
@@ -587,19 +589,28 @@ server <- function(input, output) {
       
     # write image to pass it to OCR functions
     # not possible to pass it directly as magick object
-    image_write(img(), path = path_temp, format = "png",
-                density = 120) 
-      
+    if (input$force_rasterize) {
+      # Re-rasterize at 300 DPI, flatten alpha, ensure 8-bit RGB PNG
+      img_ocr <- img() |>
+        image_flatten() |>
+        image_convert(type = "TrueColor", depth = 8)
+      image_write(img_ocr, path = path_temp, format = "png",
+                  density = 300)
+    } else {
+      image_write(img(), path = path_temp, format = "png",
+                  density = 120)
+    }
+
     #### Initialize user provided input
     cols <<- values$DT$x[values$DT$horizontal == 0] %>% sort() # Columns
     y_lim <<- values$DT$y[values$DT$horizontal == 1] %>% sort() # Top/Buttom rule
-    
+
     ##### Check user input #####
     tryCatch({
-      
+
       # Check length of columns, minimum of two columns must be specified
       if(length(cols) < 2){stop()}
-      
+
       # Check appropriate length of y limits
       if(length(y_lim) == 1 | length(y_lim) > 2){stop()}
       
@@ -821,8 +832,16 @@ server <- function(input, output) {
 
     # write image to pass it to OCR functions
     # not possible to pass it directly as magick object
-    image_write(img(), path = path_temp, format = "png",
-                density = 120)
+    if (input$force_rasterize) {
+      img_ocr <- img() |>
+        image_flatten() |>
+        image_convert(type = "TrueColor", depth = 8)
+      image_write(img_ocr, path = path_temp, format = "png",
+                  density = 300)
+    } else {
+      image_write(img(), path = path_temp, format = "png",
+                  density = 120)
+    }
 
     #### Initialize user provided input
     cols <<- values$DT$x[values$DT$horizontal == 0] %>% sort() # Columns
