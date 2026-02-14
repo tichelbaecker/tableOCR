@@ -316,7 +316,7 @@ server <- function(input, output) {
     add_row <- data.frame()
     
     # Hardcoded values
-    path_temp <<- "temp.png"
+    path_temp <<- tempfile(fileext = ".png")
     #path_temp2 <<- "temp2.png"
     # height is also hardcoded once image is loaded
     
@@ -328,72 +328,69 @@ server <- function(input, output) {
     
     
   ####### 4.3 Load Image ########
+
+    # Cache for processed page images (keyed by datapath-page-rotation)
+    image_cache <- reactiveValues()
+
     img <- reactive({
-      
+
       # Save image/pdf path
       f <<- input$image
-      
+
       # Return empty frame if no image provided
       if (is.null(f))
         return(NULL)
-      
+
+      # Check image cache
+      cache_key <- paste(f$datapath, input$page, input$rotate, sep = "-")
+      if (!is.null(image_cache[[cache_key]])) {
+        cached <- image_cache[[cache_key]]
+        height <<- cached$height
+        return(cached$img)
+      }
+
       # For PDF input
       if (str_detect(f$datapath, "\\.pdf$")) {
-        
-        
+
         path_page = paste0(f$datapath, "[", input$page - 1, "]")
-        
-        img <- image_read(
+
+        result <- image_read(
           path = path_page,
           density = 200
-        ) |> 
-          image_rotate(input$rotate) |> 
-          image_convert(colorspace = "Gray") 
-        
-        # 1) Render the PDF page to a bitmap using pdftools
-        # bitmap <- pdftools::pdf_render_page(
-        #   pdf  = f$datapath,
-        #   page = input$page,
-        #   dpi  = 200
-        # )
-        # # bitmap is a [height x width x 3] array (RGB)
-        # 
-        # # 2) Convert bitmap → raw PNG and read with magick
-        # png_raw <- png::writePNG(bitmap)
-        # img <- magick::image_read(png_raw) |>
-        #   magick::image_rotate(input$rotate)
-        
-        # 3) Get height correctly from metadata
-        meta <- magick::image_info(img)
+        ) |>
+          image_rotate(input$rotate) |>
+          image_convert(colorspace = "Gray")
+
+        meta <- magick::image_info(result)
         height <<- meta$height
-        
-        img
-      
-        
-        # For image input  
-      }else{
-        
-        # load image
-        img <- image_read(f$datapath) |> 
-          image_rotate(input$rotate) |> 
-          image_convert(colorspace = "Gray") 
-          # image_threshold(type = "black", threshold = "65%") %>%
-          # image_threshold(type = "white", threshold = "65%") %>%
-          #image_deskew() %>%
-          
-        
-        # calculate height
-        image_meta <- image_data(img)
+
+        # For image input
+      } else {
+
+        result <- image_read(f$datapath) |>
+          image_rotate(input$rotate) |>
+          image_convert(colorspace = "Gray")
+
+        image_meta <- image_data(result)
         height <<- dim(image_meta)[3]
-        
-        # display image
-        img
-        
       }
-      
+
+      # Store in cache
+      image_cache[[cache_key]] <- list(img = result, height = height)
+      result
+
     })
-    
-    
+
+    # Cache the raster conversion (expensive, only redo once per image change)
+    img_raster <- reactive({
+      req(img())
+      as.raster(img())
+    })
+
+    # Debounce zoom to avoid rapid re-renders while dragging slider
+    zoom_debounced <- debounce(reactive(input$zoom), 200)
+
+
   ####### 4.4 Record Clicks ########
     
     observeEvent(input$plot_click, {
@@ -537,10 +534,19 @@ server <- function(input, output) {
                                     temp_df)
     })  
     
+    # Waiter for OCR loading indicator
+    w <- waiter::Waiter$new(
+      html = waiter::spin_fading_circles(),
+      color = "rgba(255,255,255,0.7)"
+    )
+
   ####### 4.6 OCR ########
-    
+
   observeEvent(input$google, {
-      
+
+    w$show()
+    on.exit(w$hide())
+
     #### 4.6.1 Check user inputs & prepare data ####
       
     # write image to pass it to OCR functions
@@ -1036,23 +1042,21 @@ server <- function(input, output) {
     
     
     ##### Image with lines printed on #####
-    observe({
-      output$raster <- renderPlot({
-        req(img())
-        
-        plot(img())
-        abline(h = values$DT$y[values$DT$horizontal == 1])
-        abline(v = values$DT$x[values$DT$horizontal == 0])
-        abline(h = rows_remove$DT$y[rows_remove$DT$horizontal == 1], col = "red")
-        abline(v = rows_remove$DT$x[rows_remove$DT$horizontal == 0], col = "blue")
-        
-        if(input$visual == "on"){
-          abline(h = values$rows$y, col = "red")
-          rect(values$bbox$x1, values$bbox$y1, 
-               values$bbox$x2, values$bbox$y2, border = "darkgreen")
-        }
-      }, height = input$zoom, width = input$zoom)
-    })
+    output$raster <- renderPlot({
+      req(img_raster())
+
+      plot(img_raster())
+      abline(h = values$DT$y[values$DT$horizontal == 1])
+      abline(v = values$DT$x[values$DT$horizontal == 0])
+      abline(h = rows_remove$DT$y[rows_remove$DT$horizontal == 1], col = "red")
+      abline(v = rows_remove$DT$x[rows_remove$DT$horizontal == 0], col = "blue")
+
+      if(input$visual == "on"){
+        abline(h = values$rows$y, col = "red")
+        rect(values$bbox$x1, values$bbox$y1,
+             values$bbox$x2, values$bbox$y2, border = "darkgreen")
+      }
+    }, height = function() zoom_debounced(), width = function() zoom_debounced())
   }
 
 shinyApp(ui = ui, server = server)
