@@ -91,8 +91,7 @@ line_segment_fit <- function(centered_y,
 ####### 3. UI ########
 
 ui <- fluidPage(
-  waiter::use_waiter(),
-  
+
   # Application title
   titlePanel("TableOCR"),
   
@@ -572,159 +571,153 @@ server <- function(input, output) {
                                     temp_df)
     })  
     
-    # Waiter for OCR loading indicator
-    w <- waiter::Waiter$new(
-      html = waiter::spin_fading_circles(),
-      color = "rgba(255,255,255,0.7)"
-    )
-
   ####### 4.6 OCR ########
 
   observeEvent(input$google, {
 
-    w$show()
-    on.exit(w$hide())
+    withProgress(message = "Running Google OCR", value = 0, {
 
     #### 4.6.1 Check user inputs & prepare data ####
-      
+
+    incProgress(0.05, detail = "Preparing image...")
+
     # write image to pass it to OCR functions
     # not possible to pass it directly as magick object
-    if (input$force_rasterize) {
-      # Re-rasterize at 300 DPI, flatten alpha, ensure 8-bit RGB PNG
-      img_ocr <- img() |>
-        image_flatten() |>
-        image_convert(type = "TrueColor", depth = 8)
-      image_write(img_ocr, path = path_temp, format = "png",
-                  density = 300)
-    } else {
-      image_write(img(), path = path_temp, format = "png",
-                  density = 120)
-    }
+    tryCatch({
+      if (input$force_rasterize) {
+        # Re-rasterize at 300 DPI, flatten alpha, ensure 8-bit RGB PNG
+        img_ocr <- img() |>
+          image_flatten() |>
+          image_convert(type = "TrueColor", depth = 8)
+        image_write(img_ocr, path = path_temp, format = "png",
+                    density = 300)
+      } else {
+        image_write(img(), path = path_temp, format = "png",
+                    density = 120)
+      }
+    }, error = function(cond) {
+      showNotification(paste0("Failed to prepare image: ", conditionMessage(cond)),
+                       type = "error")
+    })
+    if (!file.exists(path_temp)) return(NULL)
+
+    # Clean up temp file when we exit (success or error)
+    on.exit(if (file.exists(path_temp)) file.remove(path_temp), add = TRUE)
 
     #### Initialize user provided input
     cols <<- values$DT$x[values$DT$horizontal == 0] %>% sort() # Columns
     y_lim <<- values$DT$y[values$DT$horizontal == 1] %>% sort() # Top/Buttom rule
 
-    ##### Check user input #####
-    tryCatch({
+    ##### Check user input (with early return on error) #####
+    incProgress(0.05, detail = "Validating inputs...")
 
-      # Check length of columns, minimum of two columns must be specified
-      if(length(cols) < 2){stop()}
+    # Check length of columns, minimum of two columns must be specified
+    if (length(cols) < 2) {
+      showNotification("Please provide the location of table columns (at least 2).",
+                       type = "error")
+      return(NULL)
+    }
 
-      # Check appropriate length of y limits
-      if(length(y_lim) == 1 | length(y_lim) > 2){stop()}
-      
-      # Only throw warning does not stop OCR.
-      if (length(y_lim) == 0){
-        
-      # Return warning 
+    # Check appropriate length of y limits
+    if (length(y_lim) == 1 | length(y_lim) > 2) {
+      showNotification("Please indicate either top & bottom rule or none.
+                        You have indicated only one or more than two values.",
+                       type = "error")
+      return(NULL)
+    }
+
+    # Only throw warning, does not stop OCR.
+    if (length(y_lim) == 0) {
       showNotification("No bottom or top rule indicated. OCR proceeds using
                         entire height of image.", type = "warning")
-        
-      # set to 0 and image height
-      y_lim = c(0, height)
-        
-      # get image meta data
+      y_lim <- c(0, height)
       height_temp <<- height
-      }
-      
-      
-    },
-    # Error handling user input
-    error = function(cond) {
-      
-      # Return error message if fewer than two columns given
-      if(length(cols) < 2){
-        showNotification("Please provide the location of table columns.", 
-                         type = "error")}
-      
-      # Return error message if only one top or bottom rule given
-      else if(length(y_lim) == 1 | length(y_lim) > 2){
-      showNotification("Please indicate either top & bottom rule or none. 
-                        You have either indicated only one or more than 
-                       two values.", 
+    }
+
+
+    ##### Check Google OCR Auth (with early return on error) #####
+    incProgress(0.05, detail = "Checking authentication...")
+
+    json_file <- auth_file_path
+    if (is.na(json_file) || !file.exists(json_file)) {
+      showNotification("No Google Auth JSON file found. Check file existence and path.",
                        type = "error")
-      }
-      
-      else {
-        
-        showNotification("An unknown error occurred when checking input.", 
-                         type = "error")
-      }
-    }) # ends tryCatch for user input
-    
-    
-    ##### Check Google OCR Auth #####
-    tryCatch({
-      
-      #### Google OCR authentification
-      #json_file <- list.files()[str_detect(list.files(), "json")]
-      json_file <- auth_file_path
-      if(!file.exists(json_file) | is.na(json_file)){stop()}
-      
-      # Authenticate
-      Sys.setenv("GCV_AUTH_FILE" = json_file)
-      
-    }, error = function(cond) {
-      
-      # Error for non-existing json
-      if(!file.exists(json_file)){
-        
-        # Return error 
-        showNotification("No Google Auth json file found. Check file existence and path.", 
-                         type = "error")
-      }
-      
-      # Error for more than one json
-      else if(length(json_file) > 1){
-        
-        # Return error 
-        showNotification("Path string has to be of length 1.", 
-                         type = "error")
-      }
-      
-      else {
-        
-        showNotification("An unknown error occurred when checking Google Auth file.", 
-                         type = "error")
-      }
-        
-        
-    })
-    
-    
+      return(NULL)
+    }
+    if (length(json_file) > 1) {
+      showNotification("Auth file path must be of length 1.",
+                       type = "error")
+      return(NULL)
+    }
+    Sys.setenv("GCV_AUTH_FILE" = json_file)
+
+
     ##### Run Google OCR using temp file #####
-          
-    # Run OCR core function (w/ Google)
-    tryCatch({
-      
-      # Google OCR run
-      text_df <<- gcv_get_image_annotations(
+
+    incProgress(0.1, detail = "Sending image to Google Vision API...")
+
+    # Run OCR core function (w/ Google) with timeout
+    text_df <- tryCatch({
+
+      # Set a 120-second timeout for the API call
+      setTimeLimit(elapsed = 120, transient = TRUE)
+      on.exit(setTimeLimit(elapsed = Inf, transient = FALSE), add = TRUE)
+
+      result <- gcv_get_image_annotations(
                   imagePaths = path_temp,
                   feature = "TEXT_DETECTION",
                   maxNumResults = 15
                 )
-            
-      # throw error if no results returned
-      if(is.null(text_df$x)){stop()}
-            
+
+      # Reset time limit immediately after API returns
+      setTimeLimit(elapsed = Inf, transient = FALSE)
+      result
+
+    }, error = function(cond) {
+      setTimeLimit(elapsed = Inf, transient = FALSE)
+      msg <- conditionMessage(cond)
+      if (grepl("elapsed time limit|time limit", msg, ignore.case = TRUE)) {
+        showNotification("Google OCR timed out after 120 seconds. Check your internet connection or try a smaller image.",
+                         type = "error")
+      } else {
+        showNotification(paste0("Google OCR API error: ", msg),
+                         type = "error")
+      }
+      return(NULL)
+    })
+
+    # Early return if API call failed
+    if (is.null(text_df)) return(NULL)
+
+    incProgress(0.3, detail = "Processing OCR results...")
+
+    ##### Process OCR results #####
+    tryCatch({
+
+      # Check if results are usable
+      if (is.null(text_df$x)) {
+        showNotification("Google OCR returned no results. Try adjusting the table area or image format.",
+                         type = "error")
+        return(NULL)
+      }
+
       # save x coordinates of bounding boxes
-      x <<- text_df$x %>% strsplit(., ", ") %>% 
-              unlist() %>% 
-              as.numeric() %>% 
+      x <<- text_df$x %>% strsplit(., ", ") %>%
+              unlist() %>%
+              as.numeric() %>%
               matrix(., ncol = 4, byrow = T) %>%
               .[, 1:2]
-            
+
       # save y coordinates of bounding boxes
-      y <<- text_df$y %>% strsplit(., ", ") %>% 
-              unlist() %>% 
-              as.numeric() %>% 
+      y <<- text_df$y %>% strsplit(., ", ") %>%
+              unlist() %>%
+              as.numeric() %>%
               matrix(., ncol = 4, byrow = T) %>%
               .[, c(1,3)]
-            
+
       # Reverse y for proper displaying and extraction
       y <- height - y
-            
+
       # generate clean text_df data
       text_df$y1 <- y[, 1]
       text_df$y2 <- y[, 2]
@@ -732,9 +725,9 @@ server <- function(input, output) {
       text_df$x2 <- x[, 2]
       text_df$centered_y <- y[, 1] + (y[, 2] - y[, 1])/2
       text_df$centered_x <- x[, 1] + (x[, 2] - x[, 1])/2
-            
+
       # rename text_df description
-      text_df <- text_df %>% 
+      text_df <- text_df %>%
         rename("text" = "description")
 
       # generate clean bbox data
@@ -742,87 +735,83 @@ server <- function(input, output) {
                                 y1 = y[, 1],
                                 x2 = x[, 2],
                                 y2 = y[, 2])
-      
-      text_df$in_table <- ifelse(text_df$centered_x > cols[1] & 
-                                   text_df$centered_x < cols[length(cols)] & 
+
+      text_df$in_table <- ifelse(text_df$centered_x > cols[1] &
+                                   text_df$centered_x < cols[length(cols)] &
                                    text_df$y1 > y_lim[1] &
                                    text_df$y2 < y_lim[2], T, F)
       text_df <- text_df %>% filter(in_table)
-      
-      
+
+      if (nrow(text_df) == 0) {
+        showNotification("No text detected within the specified table area. Try adjusting column lines or top/bottom rules.",
+                         type = "warning")
+        return(NULL)
+      }
+
+      incProgress(0.2, detail = "Segmenting lines...")
+
       ###### Line segmentation
-      
+
       lines_y <- line_segment_fit(text_df$centered_y,
                                     text_df$centered_x,
                                     text_df$y2,
                                     text_df$y1)
       text_df$lines_y <- lines_y
-      
-      
+
+
       # add top and buttom rule to y lines, sort decreasing
       lines_y <- sort(unique(lines_y), decreasing = T)
-      
+
+      incProgress(0.1, detail = "Building table...")
+
       # set number of columns and rows for target matrix
       no_cols <- length(cols) - 1
       no_rows <- length(lines_y)
-      
+
       # set up target matrix
       temp <- as.data.frame(matrix(ncol = no_cols, nrow = no_rows))
-      
+
       for(i in 2:length(cols)){
         for(j in 1:length(lines_y)){
-          
+
           x_left <- cols[i-1]
           x_right <- cols[i]
-          
+
           # find all cells that
           ## are inbetween col[i-1] and col[i]
           ## are in line j
           cell_attempt <- text_df$text[which(x_left < text_df$centered_x &
                                                x_right > text_df$centered_x &
                                                text_df$lines_y == lines_y[j])]
-          
+
           if(length(cell_attempt) > 1){
             cell <- paste0(cell_attempt, collapse = " ")
           }
-          
+
           if(length(cell_attempt) == 1){
             cell <- cell_attempt
           }
-          
+
           if(length(cell_attempt) == 0){
             cell <- NA
           }
-          
+
           temp[j, i-1] <- cell
-          
+
         }
       }
-      
+
       final$DT <- temp
-      file.remove(c(path_temp))},
-      
-      
-      # Error handling
-      error = function(cond) {
-        
-        # Error for more than one json
-        if(is.null(text_df$x)){
-          
-          # Return error 
-          showNotification("Looks like the Google OCR yielded no results. Maybe change
-                           the area of the table or try another format.", 
-                           type = "error")
-        }else{
 
-          showNotification("An unknown error occurred when extracting table.", 
-                           type = "error")
-        }
-    }
+      incProgress(0.1, detail = "Done!")
 
-        
-  ) # close last tryCatch
-      
+    }, error = function(cond) {
+      showNotification(paste0("Error processing OCR results: ", conditionMessage(cond)),
+                       type = "error")
+    })
+
+    }) # end withProgress
+
   })
     
 ##### Tesseract ###### 

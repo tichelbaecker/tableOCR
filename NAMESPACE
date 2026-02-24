@@ -8,5 +8,5 @@ import(shiny)
 import(shinyWidgets)
 import(stringr)
 import(png)
-import(waiter)
+
 importFrom(pdftools,pdf_render_page)

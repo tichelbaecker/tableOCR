@@ -9,7 +9,7 @@ Authors@R:
 Description: This is the beta version of TableOCR a ShinyApp to extract tables from image files. 
 License: What license it uses
 Imports:
-    dplyr, googleCloudVisionR, magick, shiny, shinyWidgets, stringr, pdftools, waiter, png
+    dplyr, googleCloudVisionR, magick, shiny, shinyWidgets, stringr, pdftools, png
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.1
