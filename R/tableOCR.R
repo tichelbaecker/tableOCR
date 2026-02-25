@@ -40,7 +40,8 @@ line_segment_fit <- function(centered_y,
   while (length(remaining) > 0) {
 
     # pick a random unassigned box as seed
-    seed_idx <- sample(remaining, 1)
+    # (guard against sample(n,1) drawing from 1:n when length is 1)
+    seed_idx <- if (length(remaining) == 1) remaining else sample(remaining, 1)
     seed_mid <- centered_y[seed_idx]
 
     # initial candidates: boxes whose midpoint is within 1.5x
@@ -78,6 +79,9 @@ line_segment_fit <- function(centered_y,
     } else {
       on_line <- initial
     }
+
+    # guarantee progress: always assign at least the seed
+    if (length(on_line) == 0) on_line <- seed_idx
 
     # label with mean y so sorting by unique(lines_y) preserves row order
     lines_y[on_line] <- mean(centered_y[on_line])
